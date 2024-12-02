@@ -9,12 +9,12 @@ url = 'http://localhost:11434/api/generate'
 
 async def llm_reply(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     payload = {
-        "model": "hf.co/MTSAIR/Cotype-Nano-GGUF",
+        "model": model_name,
         "prompt": update.message.text
     }
     await update.message.reply_text("...")
     answer = "" 
-    async with aiohttp.ClientSession as session:
+    async with aiohttp.ClientSession() as session:
         async with session.post(url, json=payload) as response:
             data = await response.json()
             answer += " " + data["response"]
