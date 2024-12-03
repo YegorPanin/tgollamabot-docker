@@ -13,7 +13,7 @@ async def llm_reply(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         "model": model_name,
         "prompt": update.message.text
     }
-    message = await update.message.reply_text("...")
+    message = await update.message.reply_text("📜 Размышляю над вашим запросом... ")
     answer = ""
 
     async with aiohttp.ClientSession() as session:
@@ -21,14 +21,20 @@ async def llm_reply(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             if response.status == 200:
                 async for line in response.content:
                     data = json.loads(line.decode('utf-8'))
-                    answer += " " + data.get("response", "")
-                await context.bot.edit_message_text(chat_id=update.effective_chat.id, 
-                                                    message_id=message.message_id, 
-                                                    text=answer)
+                    new_answer = answer + data.get("response", "")
+                    if new_answer != answer:
+                        answer = new_answer
+                        await context.bot.edit_message_text(
+                            chat_id=update.effective_chat.id,
+                            message_id=message.message_id,
+                            text=answer
+                        )
             else:
-                await context.bot.edit_message_text(chat_id=update.effective_chat.id, 
-                                                    message_id=message.message_id, 
-                                                    text=f'Ошибка сервера: {response.status}')
+                await context.bot.edit_message_text(
+                    chat_id=update.effective_chat.id,
+                    message_id=message.message_id,
+                    text=f'Ошибка сервера: {response.status}'
+                )
 
 app = ApplicationBuilder().token(bot_key).build()
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, llm_reply))
